@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <map>
 #include <set>
@@ -8,7 +10,7 @@
 #include <vector>
 
 namespace TestRunnerPrivate {
-template <typename K, typename V, template <typename, typename> class Map>
+template<typename K, typename V, template<typename, typename> class Map>
 std::ostream& PrintMap(std::ostream& os, const Map<K, V>& m) {
     os << "{";
     bool first = true;
@@ -21,9 +23,9 @@ std::ostream& PrintMap(std::ostream& os, const Map<K, V>& m) {
     }
     return os << "}";
 }
-}  // namespace TestRunnerPrivate
+}// namespace TestRunnerPrivate
 
-template <class T>
+template<class T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& s) {
     os << "{";
     bool first = true;
@@ -37,7 +39,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& s) {
     return os << "}";
 }
 
-template <class T>
+template<class T>
 std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
     os << "{";
     bool first = true;
@@ -51,17 +53,17 @@ std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
     return os << "}";
 }
 
-template <class K, class V>
+template<class K, class V>
 std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m) {
     return TestRunnerPrivate::PrintMap(os, m);
 }
 
-template <class K, class V>
+template<class K, class V>
 std::ostream& operator<<(std::ostream& os, const std::unordered_map<K, V>& m) {
     return TestRunnerPrivate::PrintMap(os, m);
 }
 
-template <class T, class U>
+template<class T, class U>
 void AssertEqual(const T& t, const U& u, const std::string& hint = {}) {
     if (!(t == u)) {
         std::ostringstream os;
@@ -79,7 +81,7 @@ inline void Assert(bool b, const std::string& hint) {
 
 class TestRunner {
 public:
-    template <class TestFunc>
+    template<class TestFunc>
     void RunTest(TestFunc func, const std::string& test_name) {
         try {
             func();
@@ -109,18 +111,20 @@ private:
 #define FILE_NAME __FILE__
 #endif
 
-#define ASSERT_EQUAL(x, y)                                                                       \
-    {                                                                                            \
-        std::ostringstream __assert_equal_private_os;                                            \
-        __assert_equal_private_os << #x << " != " << #y << ", " << FILE_NAME << ":" << __LINE__; \
-        AssertEqual(x, y, __assert_equal_private_os.str());                                      \
+#define ASSERT_EQUAL(x, y)                                                   \
+    {                                                                        \
+        std::ostringstream __assert_equal_private_os;                        \
+        __assert_equal_private_os << #x << " != " << #y << ", " << FILE_NAME \
+                                  << ":" << __LINE__;                        \
+        AssertEqual(x, y, __assert_equal_private_os.str());                  \
     }
 
-#define ASSERT(x)                                                                   \
-    {                                                                               \
-        std::ostringstream __assert_private_os;                                     \
-        __assert_private_os << #x << " is false, " << FILE_NAME << ":" << __LINE__; \
-        Assert(x, __assert_private_os.str());                                       \
+#define ASSERT(x)                                                      \
+    {                                                                  \
+        std::ostringstream __assert_private_os;                        \
+        __assert_private_os << #x << " is false, " << FILE_NAME << ":" \
+                            << __LINE__;                               \
+        Assert(x, __assert_private_os.str());                          \
     }
 
 #define RUN_TEST(tr, func) tr.RunTest(func, #func)

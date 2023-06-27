@@ -1,0 +1,54 @@
+@startuml
+'https://plantuml.com/activity-diagram-beta
+
+<style>
+activity
+	{
+		HorizontalAlignment center
+	}
+</style>
+
+-[hidden]->
+split
+
+	-[hidden]->
+	split
+		-[hidden]->
+		start
+		:**Sheet**;
+		:.PrintValues;
+
+	split again
+		-[hidden]->
+		(A)
+	end split
+
+	:.GetCell;
+	:**Cell**;
+	:.GetValue;
+	:**CellImpl**;
+
+	if (**FormulaImpl**) then (no)
+	end
+	endif
+	:.GetValue;
+	:**FormulaInterface**;
+	(1)
+	detach
+
+split again
+	-[hidden]->
+	(1)
+	:**Formula**;
+	:.Evaluate;
+	:**FormulaAST**;
+	:.Execute;
+	:**ASTImpl::Expr**;
+	if (**CellExpr**) then (yes)
+	(A)
+	endif
+	end
+
+end split
+
+@enduml

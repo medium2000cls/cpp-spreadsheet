@@ -1,0 +1,47 @@
+@startuml
+'https://plantuml.com/activity-diagram-beta
+<style>
+activity
+	{
+		HorizontalAlignment center
+	}
+</style>
+
+start
+    :**Sheet**;
+    #palegreen:CheckCyclicalDependencies(//Position// pos, //const std::unordered_set<Position,//
+    //PositionHasher>&// referenced_cells, //std::unordered_set<Position>&// checked_cells);
+    note right
+        Рекурсивно перебираем список
+        связанных(referenced) ячеек
+    end note
+
+    group CheckCyclicalDependencies
+        while (//Position// ref_pos : referenced_cells)
+            if (checked_cells.count(ref_pos)) then (Если есть в списке \nпроверенных ячеек, \nто проходим мимо)
+            else if(referenced_cells.count(ref_pos)) then (если содержит)
+                if (referenced_cells_[ref_pos].count(pos)) then (если содержит)
+                    :throw CircularDependencyException(...);
+                    note right
+                        Выбрасываем
+                        исключение
+                        или возврощаем
+                        false
+                    end note
+                    stop
+                endif
+                #palegreen:CheckCyclicalDependencies(pos,
+                referenced_cells_[ref_pos], checked_cells);
+                :checked_cells.emplace(ref_pos);
+                note right
+                Добавляем проверенную
+                ячейку в список, и далее
+                можно будет её пропустить.
+                end note
+            endif
+        endwhile
+        :return true;
+    end group
+
+end
+@enduml

@@ -1,0 +1,92 @@
+@startuml
+'https://plantuml.com/activity-diagram-beta
+<style>
+activity
+	{
+		HorizontalAlignment center
+	}
+</style>
+
+start
+    :**Sheet**;
+    :.SetCell;
+
+group try
+	:std::unique_ptr<CellInterface> new_cell = std::make_unique<**Cell**>(position, text);
+	note right
+	try-catch блок, если произошло
+	исключение, то состояние остается
+	валидным.
+	end note
+
+    group CellConstructor
+	if (Constructor) then (impl_ != FormulaImpl)
+    stop
+    else (impl_ == FormulaImpl)
+    endif
+    :**FormulaImpl**;
+
+    group FormulaImplConstructor
+    :ParseFormula(text);
+    :formula_ptr_ = **FormulaInterface**;
+    end group
+    end group
+
+    :std::unordered_set<Position> referenced_cells = new_cell->GetReferencedCells();
+    note right
+    Получаем связанные ячейки
+    end note
+    :std::unordered_set<Position> checked_by_chain_cells;
+    note right
+    Создаем список проверенных ячеек, что бы не проверять их дважды
+    end note
+
+    :CheckCyclicalDependencies(//Position// pos,
+    //const std::unordered_set<Position, PositionHasher>&//
+    referenced_cells, checked_by_chain_cells);
+    note right
+    Рекурсивно проверяем, что в связанных(referenced)
+    ячейках нет ячеек со ссылкой на текущую.
+    для оптимизации добавляя проверенные в
+    unordred_set. Если находим рекурсию,
+    то выбрасываем исключение
+    CircularDependencyException
+    end note
+    :InvalidationCash(//Position// pos);
+    note right
+        рекурсивно обнуляет кэш, проходя
+        по зависимых(child) ячейкам.
+    end note
+
+    :RemoveChild(//Position// pos, //const std::vector<Position>&// cells_[position]->GetReferencedCells());
+    note right
+        Удаляем позицию из списка зависимых(child) ячеек
+        не в текущей ячейке, а в связанных(referenced) ячейках,
+        то есть для данной ячейки список зависимых
+        останется без изменений
+    end note
+
+    :AddChild(//Position// pos, //const std::vector<Position>&// new_cell->GetReferencedCells());
+    note right
+        Добавляем позицию в список зависимых(child) ячеек
+        не в текущей ячейке, а в связанных(referenced) ячейках,
+        то есть для данной ячейки список зависимых
+        останется без изменений
+    end note
+
+    :ResetReferenced(//Position// pos, //const CellInterface*// new_cell);
+    note right
+        Перезаписываем список связанных(referenced) ячеек
+    end note
+
+    :cells_[position] = std::move(new_cell);
+end group
+group catch
+    :...;
+    note right
+    регистрация исключения и тд..
+    end note
+end group
+
+    end
+@enduml

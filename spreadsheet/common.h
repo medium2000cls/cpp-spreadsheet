@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+//region Close for changed
 // Позиция ячейки. Индексация с нуля.
 struct Position {
     int row = 0;
@@ -24,6 +25,12 @@ struct Position {
     static const int MAX_ROWS = 16384;
     static const int MAX_COLS = 16384;
     static const Position NONE;
+};
+
+struct PositionHasher{
+    std::size_t operator()(const Position& pos) const {
+        return std::hash<uint32_t>()(pos.row) ^ std::hash<uint32_t>()(pos.col);
+    }
 };
 
 struct Size {
@@ -97,6 +104,7 @@ public:
     // формуле. Список отсортирован по возрастанию и не содержит повторяющихся
     // ячеек. В случае текстовой ячейки список пуст.
     virtual std::vector<Position> GetReferencedCells() const = 0;
+    virtual void ClearCash() = 0;
 };
 
 inline constexpr char FORMULA_SIGN = '=';
@@ -147,3 +155,32 @@ public:
 
 // Создаёт готовую к работе пустую таблицу.
 std::unique_ptr<SheetInterface> CreateSheet();
+//endregion
+
+template<typename T, std::enable_if_t<std::is_base_of_v<SheetInterface, T>, bool> = true>
+class SheetInterfaceSingleton {
+public:
+    static const SheetInterface& GetInstance() {
+        if (instance_ptr_->sheet_interface_ == nullptr) {
+            throw std::runtime_error("SheetInterfaceSingleton is not initialized");
+        }
+        return *instance_ptr_->sheet_interface_;
+    }
+
+private:
+    static void InstanceReset(const SheetInterface& sheet_interface) {
+        static SheetInterfaceSingleton instance;
+        instance_ptr_ = &instance;
+        instance_ptr_->sheet_interface_ = &sheet_interface;
+    }
+    explicit SheetInterfaceSingleton() = default;
+    friend T;
+
+private:
+    static SheetInterfaceSingleton<T>* instance_ptr_;
+    const SheetInterface* sheet_interface_ = nullptr;
+
+public:
+    SheetInterfaceSingleton(SheetInterfaceSingleton const&) = delete;
+    void operator=(SheetInterfaceSingleton const&)  = delete;
+};

@@ -1,0 +1,34 @@
+@startuml
+'https://plantuml.com/activity-diagram-beta
+
+<style>
+activity
+	{
+		HorizontalAlignment center
+	}
+</style>
+
+start
+    :**Sheet**;
+    :InvalidationCash(//Position// pos);
+    group InvalidationCash
+    note right
+        Кэш храним в ячейке таблицы, в интерфейс добавил
+        метод инвалидации кэша.
+        Можно было бы использовать отдельный интерфейс,
+        dynamic_cast, и проверку на nullptr, но это бы
+        ухудшило читаемость, и добавило бы лишний текст.
+
+        Рекурсивно итерируемся по графу зависимых(child)
+        ячеек, и вызываем ClearCash() для каждой ячейки.
+        Внутри метода cash_.reset(). В методе GetValue
+        ячейки будем проверять cash_, на наличие значения.
+    end note
+        while (//Position// child_pos : child_cells_[pos])
+          :InvalidationCash(child_pos);
+        endwhile
+        :cells_.at(pos)->**ClearCash()**;
+    end group
+end
+
+@enduml

@@ -1,26 +1,21 @@
 #pragma once
-
+#include <optional>
 #include "common.h"
 #include "formula.h"
 
-#include <functional>
-#include <unordered_set>
-
-class Sheet;
-
 class Cell : public CellInterface {
 public:
-    Cell(Sheet& sheet);
+    Cell(std::string_view text);
     ~Cell();
 
-    void Set(std::string text);
+    void Set(std::string_view text);
     void Clear();
 
     Value GetValue() const override;
     std::string GetText() const override;
-    std::vector<Position> GetReferencedCells() const override;
 
-    bool IsReferenced() const;
+    std::vector<Position> GetReferencedCells() const override;
+    void ClearCash() override;
 
 private:
     class Impl;
@@ -28,9 +23,8 @@ private:
     class TextImpl;
     class FormulaImpl;
 
+private:
     std::unique_ptr<Impl> impl_;
-
-    // Добавьте поля и методы для связи с таблицей, проверки циклических 
-    // зависимостей, графа зависимостей и т. д.
-
+    mutable std::optional<Value> cash_;
 };
+
